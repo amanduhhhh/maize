@@ -13,7 +13,7 @@ void Maze::render(sf::RenderWindow& window) {
 
     for (int y = 0; y < GRID_HEIGHT; ++y) {
         for (int x = 0; x < GRID_WIDTH; ++x) {
-            cell.setPosition(x * CELL_SIZE, y * CELL_SIZE);
+            cell.setPosition(sf::Vector2f(x * CELL_SIZE, y * CELL_SIZE));
 
             if (m_grid[y][x] == CELL_WALL) {
                 cell.setFillColor(WALL_COLOR);

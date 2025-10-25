@@ -19,16 +19,16 @@ void Player::handleInput(const Maze& maze) {
     int oldY = getY();
     bool moved = false;
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up)) {
         setPosition(getX(), getY() - 1);
         moved = true;
-    } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
+    } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down)) {
         setPosition(getX(), getY() + 1);
         moved = true;
-    } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+    } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left)) {
         setPosition(getX() - 1, getY());
         moved = true;
-    } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
+    } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right)) {
         setPosition(getX() + 1, getY());
         moved = true;
     }

@@ -3,9 +3,9 @@
 #include <iostream>
 
 Game::Game()
-    : m_window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Oubliette - Maze Chase Game"), m_player(GRID_WIDTH / 2, GRID_HEIGHT / 2), m_pathfinder(), m_key(nullptr), m_hasKey(false), m_currentRound(1), m_maxEnemies(5), m_gameOver(false), m_roundTransition(false), m_transitionTimer(0.0f) {
+    : m_window(sf::VideoMode(sf::Vector2u(WINDOW_WIDTH, WINDOW_HEIGHT)), "Oubliette - Maze Chase Game"), m_player(GRID_WIDTH / 2, GRID_HEIGHT / 2), m_pathfinder(), m_key(nullptr), m_hasKey(false), m_currentRound(1), m_maxEnemies(5), m_gameOver(false), m_roundTransition(false), m_transitionTimer(0.0f), m_roundText(m_font) {
     // Load font for round text
-    if (!m_font.loadFromFile("C:/Windows/Fonts/arial.ttf")) {
+    if (!m_font.openFromFile("C:/Windows/Fonts/arial.ttf")) {
         // Fallback if font loading fails
         std::cout << "Warning: Could not load font, using default" << std::endl;
     }
@@ -32,9 +32,8 @@ void Game::run() {
 }
 
 void Game::processEvents() {
-    sf::Event event;
-    while (m_window.pollEvent(event)) {
-        if (event.type == sf::Event::Closed) {
+    while (auto event = m_window.pollEvent()) {
+        if (event->is<sf::Event::Closed>()) {
             m_window.close();
         }
     }
@@ -196,9 +195,9 @@ void Game::startRoundTransition() {
     m_roundText.setString(std::to_string(m_currentRound));
 
     sf::FloatRect textRect = m_roundText.getLocalBounds();
-    m_roundText.setOrigin(textRect.left + textRect.width / 2.0f,
-                          textRect.top + textRect.height / 2.0f);
-    m_roundText.setPosition(WINDOW_WIDTH / 2.0f, WINDOW_HEIGHT / 2.0f);
+    m_roundText.setOrigin(sf::Vector2f(textRect.position.x + textRect.size.x / 2.0f,
+                                       textRect.position.y + textRect.size.y / 2.0f));
+    m_roundText.setPosition(sf::Vector2f(WINDOW_WIDTH / 2.0f, WINDOW_HEIGHT / 2.0f));
 }
 
 void Game::updateRoundTransition(float deltaTime) {

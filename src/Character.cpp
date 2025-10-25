@@ -20,5 +20,5 @@ void Character::setPosition(int x, int y) {
 void Character::updatePosition() {
     float pixelX = m_gridX * CELL_SIZE;
     float pixelY = m_gridY * CELL_SIZE;
-    m_shape.setPosition(pixelX, pixelY);
+    m_shape.setPosition(sf::Vector2f(pixelX, pixelY));
 }

@@ -10,7 +10,7 @@
 // Maze dimensions
 const int MAZE_WIDTH = 25;
 const int MAZE_HEIGHT = 25;
-const int CELL_SIZE = 24;
+const int CELL_SIZE = 12;
 
 // Grid dimensions (includes walls between cells)
 const int GRID_WIDTH = MAZE_WIDTH * 2 + 1;    ///< grid width (51)
