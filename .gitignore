@@ -28,7 +28,7 @@ Makefile
 *.ilk
 
 # Third-party libraries
-SFML-2.6.1/
+SFML*
 
 # Planning files
 plans
