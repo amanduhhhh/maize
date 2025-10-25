@@ -1,11 +1,6 @@
 # Oubliette - Maze Chase 
 
 
-
-https://github.com/user-attachments/assets/910f677a-7949-48af-88c2-156afbe7aa35
-
-
-
 A maze-based chase game built with C++ and SFML where you must collect a key before escaping through the exit doors. 
 To run game (for windows), please download the latest zip from releases. Mac/linux users will need to build from source code.
 
