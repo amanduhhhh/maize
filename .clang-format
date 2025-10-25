@@ -1,0 +1,8 @@
+BasedOnStyle: Google
+BraceWrapping:
+  AfterControlStatement: false
+  AfterFunction: false
+  AfterClass: false
+  AfterNamespace: false
+IndentWidth: 4
+ColumnLimit: 0
