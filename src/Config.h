@@ -8,9 +8,10 @@
  */
 
 // Maze dimensions
-const int MAZE_WIDTH = 25;
-const int MAZE_HEIGHT = 25;
-const int CELL_SIZE = 12;
+const int MAZE_WIDTH = 21;  // Increased to 21 for more paths and complexity
+const int MAZE_HEIGHT = 21;  // Increased to 21 for more paths and complexity
+const int CELL_SIZE = 36;  // Increased from 30 to 50 for bigger game
+const float SPRITE_SCALE_MULTIPLIER = 1.4f; 
 
 // Grid dimensions (includes walls between cells)
 const int GRID_WIDTH = MAZE_WIDTH * 2 + 1;    ///< grid width (51)

@@ -37,6 +37,8 @@ void Player::handleInput(const Maze& maze) {
     if (moved) {
         if (!m_ghostMode && maze.isValidPosition(getX(), getY()) && maze.isWall(getX(), getY())) {
             setPosition(oldX, oldY);
+        } else {
+            advanceAnimation();
         }
         m_moveTimer.restart();
     }

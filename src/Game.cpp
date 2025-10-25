@@ -16,6 +16,13 @@ Game::Game()
     m_roundText.setFillColor(sf::Color::White);
     m_roundText.setStyle(sf::Text::Bold);
 
+    // Load textures
+    if (!loadTextures()) {
+        std::cout << "Warning: Could not load animation textures, using colored shapes" << std::endl;
+    } else {
+        m_player.setAnimationTextures(m_playerTexture1, m_playerTexture2);
+    }
+
     startNewRound();
 }
 
@@ -197,6 +204,19 @@ void Game::spawnEnemiesForRound(int roundNumber) {
         if (validSpawn) {
             m_enemies.emplace_back(m_maze, m_pathfinder, type);
             m_enemies.back().setPosition(enemyX, enemyY);
+            
+            switch (type) {
+                case EnemyType::ASTAR:
+                    m_enemies.back().setAnimationTextures(m_astarTexture1, m_astarTexture2);
+                    break;
+                case EnemyType::DIJKSTRA:
+                    m_enemies.back().setAnimationTextures(m_dijkstraTexture1, m_dijkstraTexture2);
+                    break;
+                case EnemyType::BEST:
+                    m_enemies.back().setAnimationTextures(m_bestTexture1, m_bestTexture2);
+                    break;
+            }
+            
             usedPositions.push_back({enemyX, enemyY});
         }
     }
@@ -314,5 +334,20 @@ void Game::updatePowerUps(float deltaTime) {
         std::remove_if(m_powerups.begin(), m_powerups.end(),
                        [](const PowerUp& powerup) { return !powerup.isActive(); }),
         m_powerups.end());
+}
+
+bool Game::loadTextures() {
+    bool player1Loaded = m_playerTexture1.loadFromFile("src/assets/player1.png");
+    bool player2Loaded = m_playerTexture2.loadFromFile("src/assets/player2.png");
+    
+    bool astar1Loaded = m_astarTexture1.loadFromFile("src/assets/astar1.png");
+    bool astar2Loaded = m_astarTexture2.loadFromFile("src/assets/astar2.png");
+    bool dijkstra1Loaded = m_dijkstraTexture1.loadFromFile("src/assets/dijkstra1.png");
+    bool dijkstra2Loaded = m_dijkstraTexture2.loadFromFile("src/assets/dijkstra2.png");
+    bool best1Loaded = m_bestTexture1.loadFromFile("src/assets/best1.png");
+    bool best2Loaded = m_bestTexture2.loadFromFile("src/assets/best2.png");
+    
+    return player1Loaded && player2Loaded && astar1Loaded && astar2Loaded && 
+           dijkstra1Loaded && dijkstra2Loaded && best1Loaded && best2Loaded;
 }
 

@@ -86,10 +86,8 @@ void Maze::dfsRecursive(int x, int y) {
 
             dfsRecursive(newX, newY);
             
-            // Occasionally create a second path from the same cell for more variety
             std::uniform_int_distribution<int> extraPath(0, 99);
-            if (extraPath(m_rng) < 10) {  // 10% chance for extra path
-                // Try to create another path in a different direction
+            if (extraPath(m_rng) < 10) {  
                 for (int j = i + 1; j < 4; ++j) {
                     int extraX = x + directions[j][0];
                     int extraY = y + directions[j][1];
@@ -98,7 +96,7 @@ void Maze::dfsRecursive(int x, int y) {
                         int extraWallX = x + directions[j][0] / 2;
                         int extraWallY = y + directions[j][1] / 2;
                         m_grid[extraWallY][extraWallX] = CELL_EMPTY;
-                        break;  // Only one extra path per cell
+                        break;  
                     }
                 }
             }

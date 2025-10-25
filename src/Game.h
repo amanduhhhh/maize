@@ -127,6 +127,12 @@ class Game {
      */
     void updatePowerUps(float deltaTime);
 
+    /**
+     * @brief Loads enemy textures
+     *
+     * @return true if all textures loaded successfully
+     */
+    bool loadTextures();
 
     sf::RenderWindow m_window;
     Player m_player;
@@ -143,6 +149,12 @@ class Game {
     // Power-ups
     std::vector<PowerUp> m_powerups;
     sf::Clock m_powerupSpawnTimer;
+    
+    // Textures
+    sf::Texture m_playerTexture1, m_playerTexture2;
+    sf::Texture m_astarTexture1, m_astarTexture2;
+    sf::Texture m_dijkstraTexture1, m_dijkstraTexture2;
+    sf::Texture m_bestTexture1, m_bestTexture2;
     
     // Round transition
     bool m_roundTransition;

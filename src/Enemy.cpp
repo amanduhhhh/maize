@@ -65,6 +65,7 @@ void Enemy::update(float deltaTime, int playerX, int playerY, const Maze& maze) 
     if (shouldMakeRandomMove(randomChance)) {
         auto randomPos = getRandomAdjacentCell(maze);
         setPosition(randomPos.first, randomPos.second);
+        advanceAnimation();
         m_randomMoveCounter++;
     } else {
 
@@ -130,6 +131,7 @@ void Enemy::update(float deltaTime, int playerX, int playerY, const Maze& maze) 
 
         if (m_pathIndex < m_path.size()) {
             setPosition(m_path[m_pathIndex].first, m_path[m_pathIndex].second);
+            advanceAnimation();
             m_pathIndex++;
             m_movesSincePathUpdate++;
         }
