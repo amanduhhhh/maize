@@ -38,7 +38,34 @@ class Player : public Character {
      */
     bool canMove() const;
 
+    /**
+     * @brief Activates ghost mode for the player
+     *
+     * Allows the player to phase through walls for a limited time.
+     */
+    void activateGhostMode();
+
+    /**
+     * @brief Updates ghost mode timer
+     *
+     * @param deltaTime Time elapsed since last update
+     */
+    void updateGhostMode(float deltaTime);
+
+    /**
+     * @brief Checks if player is currently in ghost mode
+     *
+     * @return true if ghost mode is active
+     */
+    bool isGhostMode() const;
+
+
    private:
     sf::Clock m_moveTimer;          ///< Timer for controlling movement speed
     static const float MOVE_DELAY;  ///< Delay between moves
+
+    // Ghost mode
+    bool m_ghostMode;               ///< Whether ghost mode is active
+    float m_ghostModeTimer;         ///< Time remaining in ghost mode
+    sf::Color m_originalColor;      ///< Original player color
 };

@@ -32,7 +32,7 @@ class Pathfinder {
     };
 
     /**
-     * @brief Finds the shortest path from start to goal
+     * @brief Finds the shortest path from start to goal using A* algorithm
      *
      * @param startX Starting X coordinate
      * @param startY Starting Y coordinate
@@ -42,6 +42,30 @@ class Pathfinder {
      * @return Vector of grid positions representing the path (empty if no path found)
      */
     std::vector<std::pair<int, int>> findPath(int startX, int startY, int goalX, int goalY, const class Maze& maze);
+
+    /**
+     * @brief Finds the shortest path from start to goal using Dijkstra's algorithm
+     *
+     * @param startX Starting X coordinate
+     * @param startY Starting Y coordinate
+     * @param goalX Goal X coordinate
+     * @param goalY Goal Y coordinate
+     * @param maze Reference to the maze for collision checking
+     * @return Vector of grid positions representing the path (empty if no path found)
+     */
+    std::vector<std::pair<int, int>> findPathDijkstra(int startX, int startY, int goalX, int goalY, const class Maze& maze);
+
+    /**
+     * @brief Finds a path from start to goal using Greedy Best-First Search
+     *
+     * @param startX Starting X coordinate
+     * @param startY Starting Y coordinate
+     * @param goalX Goal X coordinate
+     * @param goalY Goal Y coordinate
+     * @param maze Reference to the maze for collision checking
+     * @return Vector of grid positions representing the path (empty if no path found)
+     */
+    std::vector<std::pair<int, int>> findPathGreedy(int startX, int startY, int goalX, int goalY, const class Maze& maze);
 
     /**
      * @brief Calculates Manhattan distance between two points

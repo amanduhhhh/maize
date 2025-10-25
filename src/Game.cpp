@@ -1,9 +1,10 @@
 #include "Game.h"
 
+#include <algorithm>
 #include <iostream>
 
 Game::Game()
-    : m_window(sf::VideoMode(sf::Vector2u(WINDOW_WIDTH, WINDOW_HEIGHT)), "Oubliette - Maze Chase Game"), m_player(GRID_WIDTH / 2, GRID_HEIGHT / 2), m_pathfinder(), m_key(nullptr), m_hasKey(false), m_currentRound(1), m_maxEnemies(5), m_gameOver(false), m_roundTransition(false), m_transitionTimer(0.0f), m_roundText(m_font) {
+    : m_window(sf::VideoMode(sf::Vector2u(WINDOW_WIDTH, WINDOW_HEIGHT)), "Oubliette - Maze Chase Game"), m_player(GRID_WIDTH / 2, GRID_HEIGHT / 2), m_pathfinder(), m_key(nullptr), m_hasKey(false), m_currentRound(1), m_gameOver(false), m_roundTransition(false), m_transitionTimer(0.0f), m_roundText(m_font) {
     // Load font for round text
     if (!m_font.openFromFile("C:/Windows/Fonts/arial.ttf")) {
         // Fallback if font loading fails
@@ -50,14 +51,24 @@ void Game::update(float deltaTime) {
     }
 
     m_player.handleInput(m_maze);
+    m_player.updateGhostMode(deltaTime);
 
-    // Check for key collection
     checkKeyCollection();
+
+    checkPowerUpCollection();
+
+    updatePowerUps(deltaTime);
+
+    if (m_powerupSpawnTimer.getElapsedTime().asSeconds() >= POWERUP_SPAWN_INTERVAL && m_powerups.size() < MAX_POWERUPS) {
+        spawnPowerUp();
+        m_powerupSpawnTimer.restart();
+    }
 
     // Update all enemies
     for (auto& enemy : m_enemies) {
         enemy.update(deltaTime, m_player.getX(), m_player.getY(), m_maze);
     }
+
 
     if (checkWinCondition()) {
         std::cout << "Congratulations! You escaped the maze! Starting round " << (m_currentRound + 1) << "..." << std::endl;
@@ -80,6 +91,11 @@ void Game::render() {
     // Render key if not collected
     if (m_key && !m_hasKey) {
         m_key->render(m_window);
+    }
+
+    // Render all power-ups
+    for (auto& powerup : m_powerups) {
+        powerup.render(m_window);
     }
 
     // Render all enemies
@@ -110,14 +126,12 @@ void Game::render() {
 }
 
 bool Game::checkWinCondition() const {
-    // Player must have key AND be on exit (border)
     if (!m_hasKey) return false;
     return m_player.getX() < 0 || m_player.getX() >= GRID_WIDTH ||
            m_player.getY() < 0 || m_player.getY() >= GRID_HEIGHT;
 }
 
 bool Game::checkGameOverCondition() const {
-    // Check if any enemy caught the player
     for (const auto& enemy : m_enemies) {
         if (enemy.hasCaughtPlayer(m_player.getX(), m_player.getY())) {
             return true;
@@ -140,14 +154,14 @@ void Game::checkKeyCollection() {
 }
 
 void Game::spawnEnemiesForRound(int roundNumber) {
-    int enemyCount = std::min(roundNumber, m_maxEnemies);
-
     std::vector<std::pair<int, int>> usedPositions;
 
     // Add player position to used positions
     usedPositions.push_back({m_player.getX(), m_player.getY()});
 
-    for (int i = 0; i < enemyCount; ++i) {
+    std::vector<EnemyType> enemyTypes = {EnemyType::ASTAR, EnemyType::DIJKSTRA, EnemyType::BEST};
+
+    for (EnemyType type : enemyTypes) {
         // Find spawn location that doesn't overlap with used positions
         std::random_device rd;
         std::mt19937 rng(rd());
@@ -181,7 +195,7 @@ void Game::spawnEnemiesForRound(int roundNumber) {
         }
 
         if (validSpawn) {
-            m_enemies.emplace_back(m_maze, m_pathfinder);
+            m_enemies.emplace_back(m_maze, m_pathfinder, type);
             m_enemies.back().setPosition(enemyX, enemyY);
             usedPositions.push_back({enemyX, enemyY});
         }
@@ -238,7 +252,67 @@ void Game::setupRound() {
 
     m_key = new Key(keyX, keyY);
 
-    // Clear old enemies and spawn new ones
     m_enemies.clear();
+    m_powerups.clear();
     spawnEnemiesForRound(m_currentRound);
 }
+
+void Game::spawnPowerUp() {
+    std::random_device rd;
+    std::mt19937 rng(rd());
+    std::uniform_int_distribution<int> xDist(1, GRID_WIDTH - 2);
+    std::uniform_int_distribution<int> yDist(1, GRID_HEIGHT - 2);
+
+    int powerupX, powerupY;
+    int attempts = 0;
+    bool validSpawn = false;
+
+    while (attempts < 100 && !validSpawn) {
+        powerupX = xDist(rng);
+        powerupY = yDist(rng);
+
+        if (!m_maze.isWall(powerupX, powerupY)) {
+            int distFromPlayer = std::abs(powerupX - m_player.getX()) + std::abs(powerupY - m_player.getY());
+            if (distFromPlayer >= 5) {
+                if (!m_key || powerupX != m_key->getX() || powerupY != m_key->getY()) {
+                    bool occupiedByEnemy = false;
+                    for (const auto& enemy : m_enemies) {
+                        if (enemy.getX() == powerupX && enemy.getY() == powerupY) {
+                            occupiedByEnemy = true;
+                            break;
+                        }
+                    }
+                    if (!occupiedByEnemy) {
+                        validSpawn = true;
+                    }
+                }
+            }
+        }
+        attempts++;
+    }
+
+    if (validSpawn) {
+        m_powerups.emplace_back(powerupX, powerupY);
+    }
+}
+
+void Game::checkPowerUpCollection() {
+    for (auto it = m_powerups.begin(); it != m_powerups.end();) {
+        if (it->isActive() && m_player.getX() == it->getX() && m_player.getY() == it->getY()) {
+            m_player.activateGhostMode();
+            it->deactivate();
+            std::cout << "Ghost Mode activated! You can phase through walls!" << std::endl;
+            it = m_powerups.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+void Game::updatePowerUps(float deltaTime) {
+    m_powerups.erase(
+        std::remove_if(m_powerups.begin(), m_powerups.end(),
+                       [](const PowerUp& powerup) { return !powerup.isActive(); }),
+        m_powerups.end());
+}
+

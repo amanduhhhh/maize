@@ -17,6 +17,10 @@ void Character::setPosition(int x, int y) {
     updatePosition();
 }
 
+void Character::setColor(sf::Color color) {
+    m_shape.setFillColor(color);
+}
+
 void Character::updatePosition() {
     float pixelX = m_gridX * CELL_SIZE;
     float pixelY = m_gridY * CELL_SIZE;

@@ -57,6 +57,13 @@ class Character {
      */
     void setPosition(int x, int y);
 
+    /**
+     * @brief Sets the character's color
+     *
+     * @param color New color for the character's visual representation
+     */
+    void setColor(sf::Color color);
+
    protected:
     /**
      * @brief Updates the character's visual position based on grid coordinates

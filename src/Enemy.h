@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "Character.h"
+#include "Config.h"
 
 // Forward declarations
 class Maze;
@@ -22,10 +23,11 @@ class Enemy : public Character {
      *
      * @param maze Reference to the maze for collision checking
      * @param pathfinder Reference to the pathfinder for AI
+     * @param type Type of enemy (determines color, speed, and pathfinding)
      *
      * Spawns the enemy at a random empty location away from the center.
      */
-    Enemy(const Maze& maze, Pathfinder& pathfinder);
+    Enemy(const Maze& maze, Pathfinder& pathfinder, EnemyType type);
 
     /**
      * @brief Updates the enemy's position and AI
@@ -62,9 +64,10 @@ class Enemy : public Character {
     /**
      * @brief Checks if enemy should make a random move instead of pathfinding
      *
+     * @param chance Probability of making a random move (0.0 to 1.0)
      * @return true if enemy should move randomly
      */
-    bool shouldMakeRandomMove() const;
+    bool shouldMakeRandomMove(float chance) const;
 
     /**
      * @brief Gets a random valid adjacent cell
@@ -74,17 +77,37 @@ class Enemy : public Character {
      */
     std::pair<int, int> getRandomAdjacentCell(const Maze& maze) const;
 
+
+
+    /**
+     * @brief Calculates target position based on Pac-Man style behavior
+     *
+     * @param playerX Player's X position
+     * @param playerY Player's Y position
+     */
+    void calculateTarget(int playerX, int playerY);
+
     const Maze& m_maze;        ///< Reference to the maze
     Pathfinder& m_pathfinder;  ///< Reference to the pathfinder
+    EnemyType m_type;          ///< Type of enemy (determines behavior)
 
     // Movement and AI
     sf::Clock m_moveTimer;                    ///< Timer for controlling movement speed
+    float m_moveDelay;                        ///< Delay between moves (type-specific)
     std::vector<std::pair<int, int>> m_path;  ///< Current path to player
     int m_pathIndex;                          ///< Current position in path
     int m_movesSincePathUpdate;               ///< Counter for path recalculation
     int m_pathUpdateInterval;                 ///< Individual path update interval (2-5)
     float m_randomMoveChance;                 ///< Chance to make random move (0.15 = 15%)
     int m_randomMoveCounter;                  ///< Counter for random moves
-    static const float MOVE_DELAY;            ///< Delay between moves (0.18s)
     static const int PATH_UPDATE_INTERVAL;    ///< Recalculate path every N moves
+
+
+    // Target tracking
+    int m_targetX, m_targetY;                 ///< Current target position
+    
+    // Distraction system for Best enemy
+    bool m_isDistracted;                      ///< Whether enemy is currently distracted
+    float m_distractionTimer;                 ///< Time remaining in distracted state
+    float m_distractionCooldown;              ///< Cooldown before next distraction
 };

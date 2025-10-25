@@ -113,6 +113,20 @@ class Maze {
     void createExits();
 
     /**
+     * @brief Adds random open areas to create more interconnected paths
+     *
+     * Creates larger open spaces and additional connections to reduce dead ends.
+     */
+    void addRandomOpenAreas();
+
+    /**
+     * @brief Ensures all areas of the maze are well-connected
+     *
+     * Creates corridors between major open areas to prevent isolated sections.
+     */
+    void ensureConnectivity();
+
+    /**
      * @brief Generates random walls for collision testing
      *
      * Creates a random pattern of walls and paths.

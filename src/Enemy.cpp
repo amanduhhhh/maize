@@ -1,16 +1,31 @@
 #include "Enemy.h"
 
 #include <algorithm>
+#include <iostream>
 #include <random>
 
 #include "Maze.h"
 #include "Pathfinder.h"
 
-const float Enemy::MOVE_DELAY = 0.15f;
 const int Enemy::PATH_UPDATE_INTERVAL = 3;  // Recalculate path every 3 moves
 
-Enemy::Enemy(const Maze& maze, Pathfinder& pathfinder)
-    : Character(GRID_WIDTH / 2, GRID_HEIGHT / 2, ENEMY_COLOR), m_maze(maze), m_pathfinder(pathfinder), m_pathIndex(0), m_movesSincePathUpdate(0) {
+Enemy::Enemy(const Maze& maze, Pathfinder& pathfinder, EnemyType type)
+    : Character(GRID_WIDTH / 2, GRID_HEIGHT / 2, ENEMY_COLOR), m_maze(maze), m_pathfinder(pathfinder), m_type(type), m_pathIndex(0), m_movesSincePathUpdate(0), m_targetX(0), m_targetY(0), m_isDistracted(false), m_distractionTimer(0.0f), m_distractionCooldown(0.0f) {
+    switch (m_type) {
+        case EnemyType::ASTAR:
+            setColor(ASTAR_ENEMY_COLOR);
+            m_moveDelay = ASTAR_ENEMY_DELAY;
+            break;
+        case EnemyType::DIJKSTRA:
+            setColor(DIJKSTRA_ENEMY_COLOR);
+            m_moveDelay = DIJKSTRA_ENEMY_DELAY;
+            break;
+        case EnemyType::BEST:
+            setColor(BEST_ENEMY_COLOR);
+            m_moveDelay = BEST_ENEMY_DELAY;
+            break;
+    }
+
     // Initialize random move behavior with some variation
     std::random_device rd;
     std::mt19937 rng(rd());
@@ -26,18 +41,83 @@ Enemy::Enemy(const Maze& maze, Pathfinder& pathfinder)
 }
 
 void Enemy::update(float deltaTime, int playerX, int playerY, const Maze& maze) {
-    if (m_moveTimer.getElapsedTime().asSeconds() < MOVE_DELAY)
+    // Update distraction system for Best enemy
+    if (m_type == EnemyType::BEST) {
+        if (m_isDistracted) {
+            m_distractionTimer -= deltaTime;
+            if (m_distractionTimer <= 0.0f) {
+                m_isDistracted = false;
+                m_distractionTimer = 0.0f;
+                m_distractionCooldown = DISTRACTION_COOLDOWN;
+                std::cout << "Best enemy stopped being distracted, returning to chase player" << std::endl;
+            }
+        } else {
+            m_distractionCooldown -= deltaTime;
+        }
+    }
+        
+    if (m_moveTimer.getElapsedTime().asSeconds() < m_moveDelay)
         return;
 
-    // Check if we should make a random move instead of pathfinding
-    if (shouldMakeRandomMove()) {
+    // All enemies have a small chance for random moves
+    float randomChance = 0.15f;
+    
+    if (shouldMakeRandomMove(randomChance)) {
         auto randomPos = getRandomAdjacentCell(maze);
         setPosition(randomPos.first, randomPos.second);
         m_randomMoveCounter++;
     } else {
+
         // need to recalculate?
-        if (m_path.empty() || m_pathIndex >= m_path.size() || m_movesSincePathUpdate >= m_pathUpdateInterval) {
-            m_path = m_pathfinder.findPath(getX(), getY(), playerX, playerY, maze);
+        bool needsRecalculation = m_path.empty() || m_pathIndex >= m_path.size() || m_movesSincePathUpdate >= m_pathUpdateInterval;
+        
+        // Best enemy distraction system
+        if (m_type == EnemyType::BEST && !m_isDistracted && m_distractionCooldown <= 0.0f) {
+            std::random_device rd;
+            std::mt19937 rng(rd());
+            std::uniform_real_distribution<float> distractionChance(0.0f, 1.0f);
+            
+            if (distractionChance(rng) < DISTRACTION_CHANCE) {
+                // Find a valid empty cell to target
+                std::uniform_int_distribution<int> randomX(1, GRID_WIDTH - 2);
+                std::uniform_int_distribution<int> randomY(1, GRID_HEIGHT - 2);
+                
+                int attempts = 0;
+                do {
+                    m_targetX = randomX(rng);
+                    m_targetY = randomY(rng);
+                    attempts++;
+                } while (maze.isWall(m_targetX, m_targetY) && attempts < 50);
+                
+                if (attempts < 50) {  // Found a valid target
+                    m_isDistracted = true;
+                    m_distractionTimer = DISTRACTION_DURATION;
+                    needsRecalculation = true;
+                    std::cout << "Best enemy got distracted! Targeting (" << m_targetX << ", " << m_targetY << ")" << std::endl;
+                }
+            }
+        }
+        
+        if (needsRecalculation) {
+            if (m_type == EnemyType::BEST && !m_isDistracted) {
+                m_targetX = playerX;
+                m_targetY = playerY;
+            } else if (m_type != EnemyType::BEST) {
+                m_targetX = playerX;
+                m_targetY = playerY;
+            }
+            // Use different pathfinding based on enemy type
+            switch (m_type) {
+                case EnemyType::ASTAR:
+                    m_path = m_pathfinder.findPath(getX(), getY(), m_targetX, m_targetY, maze);
+                    break;
+                case EnemyType::DIJKSTRA:
+                    m_path = m_pathfinder.findPathDijkstra(getX(), getY(), m_targetX, m_targetY, maze);
+                    break;
+                case EnemyType::BEST:
+                    m_path = m_pathfinder.findPathGreedy(getX(), getY(), m_targetX, m_targetY, maze);
+                    break;
+            }
             m_pathIndex = 0;
             m_movesSincePathUpdate = 0;
 
@@ -77,8 +157,7 @@ std::pair<int, int> Enemy::findRandomSpawnLocation(const Maze& maze, int playerX
         if (maze.isValidPosition(x, y) && !maze.isWall(x, y)) {
             int distanceFromPlayer = std::abs(x - playerX) + std::abs(y - playerY);
 
-            // Spawn at least 10 cells away from player
-            if (distanceFromPlayer >= 10) {
+            if (distanceFromPlayer >= 15) {
                 return {x, y};
             }
         }
@@ -102,13 +181,12 @@ std::pair<int, int> Enemy::findRandomSpawnLocation(const Maze& maze, int playerX
     return {GRID_WIDTH / 2, GRID_HEIGHT / 2};
 }
 
-bool Enemy::shouldMakeRandomMove() const {
-    // Every few moves, check if we should move randomly
+bool Enemy::shouldMakeRandomMove(float chance) const {
     if (m_randomMoveCounter % 3 == 0) {
         std::random_device rd;
         std::mt19937 rng(rd());
         std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-        return dist(rng) < m_randomMoveChance;
+        return dist(rng) < chance;
     }
     return false;
 }
@@ -137,4 +215,11 @@ std::pair<int, int> Enemy::getRandomAdjacentCell(const Maze& maze) const {
     std::mt19937 rng(rd());
     std::uniform_int_distribution<int> dist(0, validMoves.size() - 1);
     return validMoves[dist(rng)];
+}
+
+
+
+void Enemy::calculateTarget(int playerX, int playerY) {
+    m_targetX = playerX;
+    m_targetY = playerY;
 }

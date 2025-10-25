@@ -8,6 +8,7 @@
 #include "Maze.h"
 #include "Pathfinder.h"
 #include "Player.h"
+#include "PowerUp.h"
 
 /**
  * @brief Main game class that manages the game loop, window, and player
@@ -109,6 +110,24 @@ class Game {
      */
     void setupRound();
 
+    /**
+     * @brief Spawns a new power-up at a random location
+     */
+    void spawnPowerUp();
+
+    /**
+     * @brief Checks for power-up collection by the player
+     */
+    void checkPowerUpCollection();
+
+    /**
+     * @brief Updates all power-ups and removes inactive ones
+     *
+     * @param deltaTime Time elapsed since last update
+     */
+    void updatePowerUps(float deltaTime);
+
+
     sf::RenderWindow m_window;
     Player m_player;
     Maze m_maze;
@@ -119,8 +138,11 @@ class Game {
     Key* m_key;
     bool m_hasKey;
     int m_currentRound;
-    int m_maxEnemies;
     bool m_gameOver;
+    
+    // Power-ups
+    std::vector<PowerUp> m_powerups;
+    sf::Clock m_powerupSpawnTimer;
     
     // Round transition
     bool m_roundTransition;
