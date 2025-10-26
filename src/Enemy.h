@@ -50,6 +50,13 @@ class Enemy : public Character {
      */
     bool hasCaughtPlayer(int playerX, int playerY) const;
 
+    /**
+     * @brief Updates enemy speed based on round number
+     *
+     * @param roundNumber Current round number
+     */
+    void updateSpeedForRound(int roundNumber);
+
    private:
     /**
      * @brief Finds a random empty spawn location

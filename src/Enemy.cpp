@@ -10,7 +10,7 @@
 const int Enemy::PATH_UPDATE_INTERVAL = 3;  // Recalculate path every 3 moves
 
 Enemy::Enemy(const Maze& maze, Pathfinder& pathfinder, EnemyType type)
-    : Character(GRID_WIDTH / 2, GRID_HEIGHT / 2, ENEMY_COLOR), m_maze(maze), m_pathfinder(pathfinder), m_type(type), m_pathIndex(0), m_movesSincePathUpdate(0), m_targetX(0), m_targetY(0), m_isDistracted(false), m_distractionTimer(0.0f), m_distractionCooldown(0.0f) {
+    : Character(0, 0, ENEMY_COLOR), m_maze(maze), m_pathfinder(pathfinder), m_type(type), m_pathIndex(0), m_movesSincePathUpdate(0), m_targetX(0), m_targetY(0), m_isDistracted(false), m_distractionTimer(0.0f), m_distractionCooldown(0.0f) {
     switch (m_type) {
         case EnemyType::ASTAR:
             setColor(ASTAR_ENEMY_COLOR);
@@ -36,8 +36,6 @@ Enemy::Enemy(const Maze& maze, Pathfinder& pathfinder, EnemyType type)
     m_randomMoveChance = chanceDist(rng);
     m_randomMoveCounter = 0;
 
-    auto spawnPos = findRandomSpawnLocation(maze, GRID_WIDTH / 2, GRID_HEIGHT / 2);
-    setPosition(spawnPos.first, spawnPos.second);
 }
 
 void Enemy::update(float deltaTime, int playerX, int playerY, const Maze& maze) {
@@ -142,6 +140,29 @@ void Enemy::update(float deltaTime, int playerX, int playerY, const Maze& maze) 
 
 bool Enemy::hasCaughtPlayer(int playerX, int playerY) const {
     return getX() == playerX && getY() == playerY;
+}
+
+void Enemy::updateSpeedForRound(int roundNumber) {
+    float speedIncrease = (roundNumber - 1) * 0.01f;
+    
+    switch (m_type) {
+        case EnemyType::ASTAR:
+            m_moveDelay = ASTAR_ENEMY_DELAY - speedIncrease;
+            break;
+        case EnemyType::DIJKSTRA:
+            m_moveDelay = DIJKSTRA_ENEMY_DELAY - speedIncrease;
+            break;
+        case EnemyType::BEST:
+            m_moveDelay = BEST_ENEMY_DELAY - speedIncrease;
+            break;
+    }
+    
+    m_moveDelay = std::max(m_moveDelay, 0.07f);
+
+    std::cout << "Round " << roundNumber << " - " 
+              << (m_type == EnemyType::ASTAR ? "A*" : 
+                  m_type == EnemyType::DIJKSTRA ? "Dijkstra" : "Best")
+              << " enemy delay: " << m_moveDelay << "s" << std::endl;
 }
 
 std::pair<int, int> Enemy::findRandomSpawnLocation(const Maze& maze, int playerX, int playerY) {

@@ -8,18 +8,18 @@
  */
 
 // Maze dimensions
-const int MAZE_WIDTH = 21;  // Increased to 21 for more paths and complexity
-const int MAZE_HEIGHT = 21;  // Increased to 21 for more paths and complexity
-const int CELL_SIZE = 36;  // Increased from 30 to 50 for bigger game
-const float SPRITE_SCALE_MULTIPLIER = 1.4f; 
+const int MAZE_WIDTH = 21;  
+const int MAZE_HEIGHT = 21; 
+const int CELL_SIZE = 36; 
+const float SPRITE_SCALE_MULTIPLIER = 2.4f; 
 
 // Grid dimensions (includes walls between cells)
 const int GRID_WIDTH = MAZE_WIDTH * 2 + 1;    ///< grid width (51)
 const int GRID_HEIGHT = MAZE_HEIGHT * 2 + 1;  ///< grid height (51)
 
 // Window dimensions
-const int WINDOW_WIDTH = GRID_WIDTH * CELL_SIZE;    ///< (816px)
-const int WINDOW_HEIGHT = GRID_HEIGHT * CELL_SIZE;  ///< (816px)
+const int WINDOW_WIDTH = GRID_WIDTH * CELL_SIZE;    
+const int WINDOW_HEIGHT = GRID_HEIGHT * CELL_SIZE; 
 
 // Grid cell types
 const int CELL_EMPTY = 0;
@@ -38,7 +38,7 @@ enum class EnemyType {
 // Power-up settings
 const sf::Color POWERUP_COLOR = sf::Color(128, 0, 128);  // Purple
 const float GHOST_MODE_DURATION = 3.0f;
-const float POWERUP_SPAWN_INTERVAL = 2.0f;
+const float POWERUP_SPAWN_INTERVAL = 8.0f;
 const int MAX_POWERUPS = 3;
 
 

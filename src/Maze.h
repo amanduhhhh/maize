@@ -71,6 +71,14 @@ class Maze {
 
    private:
     /**
+     * @brief Draws wall lines using the new line-based rendering system
+     *
+     * @param window Reference to the SFML render window
+     *
+     * Draws thin lines from the center of each wall cell to adjacent walls.
+     */
+    void drawWallLines(sf::RenderWindow& window);
+    /**
      * @brief Generates a maze using Depth-First Search algorithm
      *
      * Creates a perfect maze starting from the center with guaranteed
@@ -104,6 +112,15 @@ class Maze {
      * @return true if wall has at least 2 adjacent path cells
      */
     bool isSurroundedByPaths(int x, int y) const;
+
+    /**
+     * @brief Checks if a wall cell forms a corner piece
+     *
+     * @param x X coordinate of wall cell
+     * @param y Y coordinate of wall cell
+     * @return true if wall forms a corner with exactly 2 adjacent walls
+     */
+    bool isCornerPiece(int x, int y) const;
 
     /**
      * @brief Creates exit points at the edges of the maze

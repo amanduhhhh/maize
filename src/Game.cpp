@@ -5,9 +5,7 @@
 
 Game::Game()
     : m_window(sf::VideoMode(sf::Vector2u(WINDOW_WIDTH, WINDOW_HEIGHT)), "Oubliette - Maze Chase Game"), m_player(GRID_WIDTH / 2, GRID_HEIGHT / 2), m_pathfinder(), m_key(nullptr), m_hasKey(false), m_currentRound(1), m_gameOver(false), m_roundTransition(false), m_transitionTimer(0.0f), m_roundText(m_font) {
-    // Load font for round text
     if (!m_font.openFromFile("C:/Windows/Fonts/arial.ttf")) {
-        // Fallback if font loading fails
         std::cout << "Warning: Could not load font, using default" << std::endl;
     }
 
@@ -49,7 +47,7 @@ void Game::processEvents() {
 
 void Game::update(float deltaTime) {
     if (m_gameOver) {
-        return;  // Don't update if game is over
+        return;
     }
 
     if (m_roundTransition) {
@@ -57,7 +55,7 @@ void Game::update(float deltaTime) {
         return;
     }
 
-    m_player.handleInput(m_maze);
+    m_player.handleInput(m_maze, m_hasKey);
     m_player.updateGhostMode(deltaTime);
 
     checkKeyCollection();
@@ -71,11 +69,9 @@ void Game::update(float deltaTime) {
         m_powerupSpawnTimer.restart();
     }
 
-    // Update all enemies
     for (auto& enemy : m_enemies) {
         enemy.update(deltaTime, m_player.getX(), m_player.getY(), m_maze);
     }
-
 
     if (checkWinCondition()) {
         std::cout << "Congratulations! You escaped the maze! Starting round " << (m_currentRound + 1) << "..." << std::endl;
@@ -95,17 +91,14 @@ void Game::render() {
 
     m_maze.render(m_window);
 
-    // Render key if not collected
     if (m_key && !m_hasKey) {
         m_key->render(m_window);
     }
 
-    // Render all power-ups
     for (auto& powerup : m_powerups) {
         powerup.render(m_window);
     }
 
-    // Render all enemies
     for (auto& enemy : m_enemies) {
         enemy.render(m_window);
     }
@@ -114,13 +107,11 @@ void Game::render() {
 
     // Round transition screen
     if (m_roundTransition) {
-        // Black background
         sf::RectangleShape blackOverlay;
         blackOverlay.setSize(sf::Vector2f(WINDOW_WIDTH, WINDOW_HEIGHT));
         blackOverlay.setFillColor(sf::Color::Black);
         m_window.draw(blackOverlay);
 
-        // Round text
         m_window.draw(m_roundText);
     }
 
@@ -162,49 +153,65 @@ void Game::checkKeyCollection() {
 
 void Game::spawnEnemiesForRound(int roundNumber) {
     std::vector<std::pair<int, int>> usedPositions;
+    std::vector<std::pair<int, int>> validSpawnPositions;
 
-    // Add player position to used positions
     usedPositions.push_back({m_player.getX(), m_player.getY()});
+
+    for (int y = 1; y < GRID_HEIGHT - 1; ++y) {
+        for (int x = 1; x < GRID_WIDTH - 1; ++x) {
+            if (!m_maze.isWall(x, y)) {
+                int distFromPlayer = std::abs(x - m_player.getX()) + std::abs(y - m_player.getY());
+                if (distFromPlayer >= 10) {
+                    int distFromLeftEdge = x;
+                    int distFromRightEdge = GRID_WIDTH - 1 - x;
+                    int distFromTopEdge = y;
+                    int distFromBottomEdge = GRID_HEIGHT - 1 - y;
+
+                    int minDistToEdge = std::min({distFromLeftEdge, distFromRightEdge,
+                                                  distFromTopEdge, distFromBottomEdge});
+
+                    if (minDistToEdge <= 3) {
+                        validSpawnPositions.push_back({x, y});
+                    }
+                }
+            }
+        }
+    }
 
     std::vector<EnemyType> enemyTypes = {EnemyType::ASTAR, EnemyType::DIJKSTRA, EnemyType::BEST};
 
     for (EnemyType type : enemyTypes) {
-        // Find spawn location that doesn't overlap with used positions
         std::random_device rd;
         std::mt19937 rng(rd());
-        std::uniform_int_distribution<int> xDist(1, GRID_WIDTH - 2);
-        std::uniform_int_distribution<int> yDist(1, GRID_HEIGHT - 2);
 
         int attempts = 0;
         int enemyX, enemyY;
         bool validSpawn = false;
 
-        while (attempts < 100 && !validSpawn) {
-            enemyX = xDist(rng);
-            enemyY = yDist(rng);
+        std::shuffle(validSpawnPositions.begin(), validSpawnPositions.end(), rng);
 
-            // Check if position is valid and not used
-            if (!m_maze.isWall(enemyX, enemyY)) {
-                // Check distance from player
-                int distFromPlayer = std::abs(enemyX - m_player.getX()) + std::abs(enemyY - m_player.getY());
-
-                if (distFromPlayer >= 10) {
-                    validSpawn = true;
-                    for (const auto& pos : usedPositions) {
-                        if (pos.first == enemyX && pos.second == enemyY) {
-                            validSpawn = false;
-                            break;
-                        }
-                    }
+        for (const auto& pos : validSpawnPositions) {
+            bool positionUsed = false;
+            for (const auto& usedPos : usedPositions) {
+                if (pos.first == usedPos.first && pos.second == usedPos.second) {
+                    positionUsed = true;
+                    break;
                 }
             }
-            attempts++;
+
+            if (!positionUsed) {
+                enemyX = pos.first;
+                enemyY = pos.second;
+                validSpawn = true;
+                break;
+            }
         }
 
         if (validSpawn) {
             m_enemies.emplace_back(m_maze, m_pathfinder, type);
             m_enemies.back().setPosition(enemyX, enemyY);
-            
+            m_enemies.back().updateSpeedForRound(m_currentRound);
+
             switch (type) {
                 case EnemyType::ASTAR:
                     m_enemies.back().setAnimationTextures(m_astarTexture1, m_astarTexture2);
@@ -216,7 +223,7 @@ void Game::spawnEnemiesForRound(int roundNumber) {
                     m_enemies.back().setAnimationTextures(m_bestTexture1, m_bestTexture2);
                     break;
             }
-            
+
             usedPositions.push_back({enemyX, enemyY});
         }
     }
@@ -237,7 +244,7 @@ void Game::startRoundTransition() {
 void Game::updateRoundTransition(float deltaTime) {
     m_transitionTimer += deltaTime;
 
-    const float TRANSITION_DURATION = 2.0f;  // 2 seconds
+    const float TRANSITION_DURATION = 2.0f;
 
     if (m_transitionTimer >= TRANSITION_DURATION) {
         m_roundTransition = false;
@@ -249,6 +256,7 @@ void Game::setupRound() {
     m_maze.regenerate();
 
     m_player.setPosition(GRID_WIDTH / 2, GRID_HEIGHT / 2);
+    m_player.resetGhostMode();
 
     m_hasKey = false;
 
@@ -268,7 +276,7 @@ void Game::setupRound() {
         keyX = xDist(rng);
         keyY = yDist(rng);
     } while (m_maze.isWall(keyX, keyY) ||
-             (keyX == GRID_WIDTH / 2 && keyY == GRID_HEIGHT / 2));  // Avoid center where player spawns
+             (keyX == GRID_WIDTH / 2 && keyY == GRID_HEIGHT / 2));
 
     m_key = new Key(keyX, keyY);
 
@@ -339,15 +347,14 @@ void Game::updatePowerUps(float deltaTime) {
 bool Game::loadTextures() {
     bool player1Loaded = m_playerTexture1.loadFromFile("src/assets/player1.png");
     bool player2Loaded = m_playerTexture2.loadFromFile("src/assets/player2.png");
-    
+
     bool astar1Loaded = m_astarTexture1.loadFromFile("src/assets/astar1.png");
     bool astar2Loaded = m_astarTexture2.loadFromFile("src/assets/astar2.png");
     bool dijkstra1Loaded = m_dijkstraTexture1.loadFromFile("src/assets/dijkstra1.png");
     bool dijkstra2Loaded = m_dijkstraTexture2.loadFromFile("src/assets/dijkstra2.png");
     bool best1Loaded = m_bestTexture1.loadFromFile("src/assets/best1.png");
     bool best2Loaded = m_bestTexture2.loadFromFile("src/assets/best2.png");
-    
-    return player1Loaded && player2Loaded && astar1Loaded && astar2Loaded && 
+
+    return player1Loaded && player2Loaded && astar1Loaded && astar2Loaded &&
            dijkstra1Loaded && dijkstra2Loaded && best1Loaded && best2Loaded;
 }
-

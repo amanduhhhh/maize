@@ -1,4 +1,5 @@
 #include "Character.h"
+#include <cmath>
 
 Character::Character(int startX, int startY, sf::Color color)
     : m_gridX(startX), m_gridY(startY), m_useSprite(false), m_texture1(nullptr), m_texture2(nullptr), m_useAnimation(false), m_currentFrame(false) {
@@ -74,6 +75,17 @@ void Character::setAnimationTextures(const sf::Texture& texture1, const sf::Text
 void Character::advanceAnimation() {
     if (m_useAnimation) {
         m_currentFrame = !m_currentFrame;
+    }
+}
+
+void Character::setFlipped(bool flip) {
+    if (m_sprite) {
+        sf::Vector2f currentScale = m_sprite->getScale();
+        if (flip) {
+            m_sprite->setScale(sf::Vector2f(-std::abs(currentScale.x), currentScale.y));
+        } else {
+            m_sprite->setScale(sf::Vector2f(std::abs(currentScale.x), currentScale.y));
+        }
     }
 }
 

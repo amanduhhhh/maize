@@ -25,11 +25,12 @@ class Player : public Character {
      * @brief Handles player input for grid-based movement
      *
      * @param maze Reference to the maze for collision checking
+     * @param hasKey Whether the player has collected the key
      *
      * Processes arrow keys and moves player one grid cell at a time.
      * Checks for wall collisions before moving.
      */
-    void handleInput(const Maze& maze);
+    void handleInput(const Maze& maze, bool hasKey);
 
     /**
      * @brief Checks if enough time has passed for movement
@@ -39,33 +40,38 @@ class Player : public Character {
     bool canMove() const;
 
     /**
-     * @brief Activates ghost mode for the player
-     *
-     * Allows the player to phase through walls for a limited time.
+     * @brief Activates ghost mode allowing wall phasing
      */
     void activateGhostMode();
 
     /**
-     * @brief Updates ghost mode timer
+     * @brief Updates ghost mode timer and deactivates when expired
      *
-     * @param deltaTime Time elapsed since last update
+     * @param deltaTime Time elapsed since last frame
      */
     void updateGhostMode(float deltaTime);
 
     /**
      * @brief Checks if player is currently in ghost mode
      *
-     * @return true if ghost mode is active
+     * @return true if in ghost mode
      */
     bool isGhostMode() const;
 
+    /**
+     * @brief Resets ghost mode (used between rounds)
+     */
+    void resetGhostMode();
 
    private:
     sf::Clock m_moveTimer;          ///< Timer for controlling movement speed
     static const float MOVE_DELAY;  ///< Delay between moves
-
-    // Ghost mode
-    bool m_ghostMode;               ///< Whether ghost mode is active
+    
+    // Ghost mode system
+    bool m_ghostMode;               ///< Whether player can phase through walls
     float m_ghostModeTimer;         ///< Time remaining in ghost mode
-    sf::Color m_originalColor;      ///< Original player color
+    sf::Color m_originalColor;      ///< Original player color to restore
+    
+    // Sprite direction
+    bool m_facingLeft;              ///< Whether player is facing left (sprite flipped)
 };

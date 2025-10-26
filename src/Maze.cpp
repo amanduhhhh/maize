@@ -16,24 +16,76 @@ void Maze::render(sf::RenderWindow& window) {
             cell.setPosition(sf::Vector2f(x * CELL_SIZE, y * CELL_SIZE));
 
             if (m_grid[y][x] == CELL_WALL) {
-                cell.setFillColor(WALL_COLOR);
+                continue;
             } else {
-                // Check if this is an exit (empty cell on border)
                 if (x == 0 || x == GRID_WIDTH - 1 || y == 0 || y == GRID_HEIGHT - 1) {
-                    cell.setFillColor(EXIT_COLOR);  // Brown for exits
+                    cell.setFillColor(EXIT_COLOR);  
                 } else {
                     cell.setFillColor(PATH_COLOR);
                 }
+                window.draw(cell);
             }
+        }
+    }
 
-            window.draw(cell);
+    drawWallLines(window);
+}
+
+void Maze::drawWallLines(sf::RenderWindow& window) {
+    const float lineThickness = 2.0f;
+    sf::RectangleShape line;
+    line.setFillColor(WALL_COLOR);
+
+    for (int y = 0; y < GRID_HEIGHT; ++y) {
+        for (int x = 0; x < GRID_WIDTH; ++x) {
+            if (m_grid[y][x] == CELL_WALL) {
+                float centerX = x * CELL_SIZE + CELL_SIZE / 2.0f;
+                float centerY = y * CELL_SIZE + CELL_SIZE / 2.0f;
+
+                bool hasWallAbove = (y > 0 && m_grid[y - 1][x] == CELL_WALL);
+                bool hasWallRight = (x < GRID_WIDTH - 1 && m_grid[y][x + 1] == CELL_WALL);
+                bool hasWallBelow = (y < GRID_HEIGHT - 1 && m_grid[y + 1][x] == CELL_WALL);
+                bool hasWallLeft = (x > 0 && m_grid[y][x - 1] == CELL_WALL);
+
+                if (!hasWallAbove && !hasWallRight && !hasWallBelow && !hasWallLeft) {
+                    line.setSize(sf::Vector2f(CELL_SIZE * 0.8f, lineThickness));
+                    line.setPosition(sf::Vector2f(centerX - CELL_SIZE * 0.4f, centerY - lineThickness / 2.0f));
+                    window.draw(line);
+                } else {
+                    
+                    if (hasWallAbove) {
+                        line.setSize(sf::Vector2f(lineThickness, CELL_SIZE / 2.0f));
+                        line.setPosition(sf::Vector2f(centerX - lineThickness / 2.0f, centerY - CELL_SIZE / 2.0f));
+                        window.draw(line);
+                    }
+
+                    if (hasWallRight) {
+                        line.setSize(sf::Vector2f(CELL_SIZE / 2.0f, lineThickness));
+                        line.setPosition(sf::Vector2f(centerX, centerY - lineThickness / 2.0f));
+                        window.draw(line);
+                    }
+
+                    // Wall below
+                    if (hasWallBelow) {
+                        line.setSize(sf::Vector2f(lineThickness, CELL_SIZE / 2.0f));
+                        line.setPosition(sf::Vector2f(centerX - lineThickness / 2.0f, centerY));
+                        window.draw(line);
+                    }
+
+                    if (hasWallLeft) {
+                        line.setSize(sf::Vector2f(CELL_SIZE / 2.0f, lineThickness));
+                        line.setPosition(sf::Vector2f(centerX - CELL_SIZE / 2.0f, centerY - lineThickness / 2.0f));
+                        window.draw(line);
+                    }
+                }
+            }
         }
     }
 }
 
 bool Maze::isWall(int gridX, int gridY) const {
     if (!isValidPosition(gridX, gridY))
-        return true;  // Treat out-of-bounds as walls
+        return true;  
 
     return m_grid[gridY][gridX] == CELL_WALL;
 }
@@ -44,22 +96,18 @@ bool Maze::isValidPosition(int gridX, int gridY) const {
 }
 
 void Maze::generateDFS() {
-    // Start with all cells as walls
     for (int y = 0; y < GRID_HEIGHT; ++y) {
         for (int x = 0; x < GRID_WIDTH; ++x) {
             m_grid[y][x] = CELL_WALL;
         }
     }
 
-    // Start DFS from center
     int centerX = GRID_WIDTH / 2;
     int centerY = GRID_HEIGHT / 2;
     dfsRecursive(centerX, centerY);
 
-    // Add branching paths by removing some walls
     addBranchingPaths();
 
-    // Create exits at edges
     createExits();
 }
 
@@ -70,7 +118,6 @@ void Maze::dfsRecursive(int x, int y) {
     // up, down, left, right (2 cells away)
     int directions[4][2] = {{0, -2}, {0, 2}, {-2, 0}, {2, 0}};
 
-    // Shuffle directions
     std::shuffle(std::begin(directions), std::end(directions), m_rng);
 
     for (int i = 0; i < 4; ++i) {
@@ -79,7 +126,6 @@ void Maze::dfsRecursive(int x, int y) {
 
         // if new position is valid and unvisited
         if (isValidPosition(newX, newY) && m_grid[newY][newX] == CELL_WALL) {
-            // Carve path
             int wallX = x + directions[i][0] / 2;
             int wallY = y + directions[i][1] / 2;
             m_grid[wallY][wallX] = CELL_EMPTY;
@@ -116,9 +162,9 @@ void Maze::addBranchingPaths() {
         int x = wallX(m_rng);
         int y = wallY(m_rng);
 
-        // Only remove walls that are between two paths
         if (m_grid[y][x] == CELL_WALL &&
             isSurroundedByPaths(x, y) &&
+            !isCornerPiece(x, y) &&
             branchChance(m_rng) < 25) {  // 25% chance
             m_grid[y][x] = CELL_EMPTY;
         }
@@ -128,7 +174,6 @@ void Maze::addBranchingPaths() {
 }
 
 bool Maze::isSurroundedByPaths(int x, int y) const {
-    // has at least 2 adjacent path cells
     int pathCount = 0;
 
     if (x > 0 && m_grid[y][x - 1] == CELL_EMPTY) pathCount++;
@@ -139,19 +184,39 @@ bool Maze::isSurroundedByPaths(int x, int y) const {
     return pathCount >= 2;
 }
 
+bool Maze::isCornerPiece(int x, int y) const {
+    
+    bool hasWallAbove = (y > 0 && m_grid[y - 1][x] == CELL_WALL);
+    bool hasWallRight = (x < GRID_WIDTH - 1 && m_grid[y][x + 1] == CELL_WALL);
+    bool hasWallBelow = (y < GRID_HEIGHT - 1 && m_grid[y + 1][x] == CELL_WALL);
+    bool hasWallLeft = (x > 0 && m_grid[y][x - 1] == CELL_WALL);
+    
+    int wallCount = 0;
+    if (hasWallAbove) wallCount++;
+    if (hasWallRight) wallCount++;
+    if (hasWallBelow) wallCount++;
+    if (hasWallLeft) wallCount++;
+    
+    if (wallCount == 2) {
+        return (hasWallAbove && hasWallRight) ||  
+               (hasWallRight && hasWallBelow) ||
+               (hasWallBelow && hasWallLeft) ||  
+               (hasWallLeft && hasWallAbove);    
+    }
+    
+    return false;
+}
+
 void Maze::createExits() {
     int exitCount = 2;
 
-    // Possible exit positions (border cells)
     std::vector<std::pair<int, int>> borderPositions;
 
-    // Top and bottom edges
     for (int x = 1; x < GRID_WIDTH - 1; x += 2) {
         borderPositions.push_back({x, 0});
         borderPositions.push_back({x, GRID_HEIGHT - 1});
     }
 
-    // Left and right edges
     for (int y = 1; y < GRID_HEIGHT - 1; y += 2) {
         borderPositions.push_back({0, y});
         borderPositions.push_back({GRID_WIDTH - 1, y});
@@ -169,7 +234,6 @@ void Maze::createExits() {
 }
 
 void Maze::generateRandomWalls() {
-    // Create border walls
     for (int x = 0; x < GRID_WIDTH; ++x) {
         m_grid[0][x] = CELL_WALL;
         m_grid[GRID_HEIGHT - 1][x] = CELL_WALL;
@@ -180,7 +244,6 @@ void Maze::generateRandomWalls() {
         m_grid[y][GRID_WIDTH - 1] = CELL_WALL;
     }
 
-    // Generate random walls inside (30% chance for each cell to be a wall)
     std::uniform_int_distribution<int> wallChance(0, 9);
 
     for (int y = 1; y < GRID_HEIGHT - 1; ++y) {
@@ -192,7 +255,6 @@ void Maze::generateRandomWalls() {
         }
     }
 
-    // Ensure center area is clear for player spawn
     int centerX = GRID_WIDTH / 2;
     int centerY = GRID_HEIGHT / 2;
 
@@ -206,13 +268,11 @@ void Maze::generateRandomWalls() {
 }
 
 void Maze::regenerate() {
-    // Reset the grid to all walls
     for (int y = 0; y < GRID_HEIGHT; ++y) {
         for (int x = 0; x < GRID_WIDTH; ++x) {
             m_grid[y][x] = CELL_WALL;
         }
     }
 
-    // Generate a new maze
     generateDFS();
 }

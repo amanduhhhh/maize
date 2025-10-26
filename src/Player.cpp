@@ -8,10 +8,10 @@
 const float Player::MOVE_DELAY = 0.1f;
 
 Player::Player(int startX, int startY)
-    : Character(startX, startY, PLAYER_COLOR), m_ghostMode(false), m_ghostModeTimer(0.0f), m_originalColor(PLAYER_COLOR) {
+    : Character(startX, startY, PLAYER_COLOR), m_ghostMode(false), m_ghostModeTimer(0.0f), m_originalColor(PLAYER_COLOR), m_facingLeft(false) {
 }
 
-void Player::handleInput(const Maze& maze) {
+void Player::handleInput(const Maze& maze, bool hasKey) {
     if (!canMove()) {
         return;
     }
@@ -28,17 +28,40 @@ void Player::handleInput(const Maze& maze) {
         moved = true;
     } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left)) {
         setPosition(getX() - 1, getY());
+        if (!m_facingLeft) {
+            m_facingLeft = true;
+            setFlipped(true);
+        }
         moved = true;
     } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right)) {
         setPosition(getX() + 1, getY());
+        if (m_facingLeft) {
+            m_facingLeft = false;
+            setFlipped(false);
+        }
         moved = true;
     }
 
     if (moved) {
-        if (!m_ghostMode && maze.isValidPosition(getX(), getY()) && maze.isWall(getX(), getY())) {
-            setPosition(oldX, oldY);
+        bool isValidPos = maze.isValidPosition(getX(), getY());
+        bool isWall = maze.isWall(getX(), getY());
+        
+        if (!isValidPos) {
+            if (hasKey) {
+                advanceAnimation();
+            } else {
+                setPosition(oldX, oldY);
+            }
         } else {
-            advanceAnimation();
+            bool isBoundaryWall = isWall && 
+                                  (getX() == 0 || getX() == maze.getGridWidth() - 1 || 
+                                   getY() == 0 || getY() == maze.getGridHeight() - 1);
+            
+            if (isWall && (!m_ghostMode || isBoundaryWall)) {
+                setPosition(oldX, oldY);
+            } else {
+                advanceAnimation();
+            }
         }
         m_moveTimer.restart();
     }
@@ -67,4 +90,10 @@ void Player::updateGhostMode(float deltaTime) {
 
 bool Player::isGhostMode() const {
     return m_ghostMode;
+}
+
+void Player::resetGhostMode() {
+    m_ghostMode = false;
+    m_ghostModeTimer = 0.0f;
+    setColor(m_originalColor);
 }

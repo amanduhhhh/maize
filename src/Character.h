@@ -92,6 +92,13 @@ class Character {
      */
     void advanceAnimation();
 
+    /**
+     * @brief Flips the sprite horizontally
+     *
+     * @param flip Whether to flip the sprite (true = flipped, false = normal)
+     */
+    void setFlipped(bool flip);
+
    protected:
     /**
      * @brief Updates the character's visual position based on grid coordinates
