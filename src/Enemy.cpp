@@ -72,27 +72,30 @@ void Enemy::update(float deltaTime, int playerX, int playerY, const Maze& maze) 
         
         // Best enemy distraction system
         if (m_type == EnemyType::BEST && !m_isDistracted && m_distractionCooldown <= 0.0f) {
-            std::random_device rd;
-            std::mt19937 rng(rd());
-            std::uniform_real_distribution<float> distractionChance(0.0f, 1.0f);
+            int distanceFromPlayer = std::abs(getX() - playerX) + std::abs(getY() - playerY);
             
-            if (distractionChance(rng) < DISTRACTION_CHANCE) {
-                // Find a valid empty cell to target
-                std::uniform_int_distribution<int> randomX(1, GRID_WIDTH - 2);
-                std::uniform_int_distribution<int> randomY(1, GRID_HEIGHT - 2);
+            if (distanceFromPlayer <= 6) {
+                std::random_device rd;
+                std::mt19937 rng(rd());
+                std::uniform_real_distribution<float> distractionChance(0.0f, 1.0f);
                 
-                int attempts = 0;
-                do {
-                    m_targetX = randomX(rng);
-                    m_targetY = randomY(rng);
-                    attempts++;
-                } while (maze.isWall(m_targetX, m_targetY) && attempts < 50);
-                
-                if (attempts < 50) {  // Found a valid target
-                    m_isDistracted = true;
-                    m_distractionTimer = DISTRACTION_DURATION;
-                    needsRecalculation = true;
-                    std::cout << "Best enemy got distracted! Targeting (" << m_targetX << ", " << m_targetY << ")" << std::endl;
+                if (distractionChance(rng) < DISTRACTION_CHANCE) {
+                    std::uniform_int_distribution<int> randomX(1, GRID_WIDTH - 2);
+                    std::uniform_int_distribution<int> randomY(1, GRID_HEIGHT - 2);
+                    
+                    int attempts = 0;
+                    do {
+                        m_targetX = randomX(rng);
+                        m_targetY = randomY(rng);
+                        attempts++;
+                    } while (maze.isWall(m_targetX, m_targetY) && attempts < 50);
+                    
+                    if (attempts < 50) {  
+                        m_isDistracted = true;
+                        m_distractionTimer = DISTRACTION_DURATION;
+                        needsRecalculation = true;
+                        std::cout << "Best enemy got distracted! Targeting (" << m_targetX << ", " << m_targetY << ") - Distance from player: " << distanceFromPlayer << std::endl;
+                    }
                 }
             }
         }
