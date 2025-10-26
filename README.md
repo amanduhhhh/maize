@@ -12,7 +12,7 @@ To run game (for windows), please download the latest zip from releases. Mac/lin
 ## How to Play
 
 ### Objective
-- You are the blue square. Find the yellow key before escaping through the brown exit doors. Red enemies will chase you
+- Dogmog (the little dog with a blue hat). You must find the key and escape the maze, while being hunted by 3 alien enemies! Eat (non-poisonous) chocolate bars to go ghost mode. 
 
 ### Controls
 - Move your character (Up, Down, Left, Right)
