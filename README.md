@@ -1,4 +1,9 @@
 # Oubliette - Maze Chase 
+<img width="810" height="810" alt="oubliette" src="https://github.com/user-attachments/assets/2e3b07bb-f7df-44ba-8272-b2c6cb0c93eb" />
+
+
+https://github.com/user-attachments/assets/69982b72-35eb-4b8f-957a-db2826180b16
+
 
 
 A maze-based chase game built with C++ and SFML where you must collect a key before escaping through the exit doors. 
@@ -23,33 +28,9 @@ The maze is generated using a recursive backtracking algorithm:
 - recursively carve paths by removing walls (this will ensure every point is reachable from the center)
 - add random branching for complexity 
 
-#### **Enemy AI - A\* Pathfinding with Randomness**
-Enemies use A* pathfinding algorithm to chase the player:
-
-```cpp
-void Enemy::update() {
-    if (shouldMakeRandomMove()) {
-        // 10-20% chance to move randomly instead of pathfinding
-        moveToRandomAdjacentCell();
-    } else {
-        path = pathfinder.findPath(currentPos, playerPos);
-        followPath();
-    }
-}
-```
-
-#### **Pathfinding Algorithm**
-The A* implementation uses Manhattan distance heuristic:
-
-```cpp
-std::vector<PathNode> Pathfinder::findPath(start, goal) {
-    // Priority queue for open nodes
-    // Manhattan distance: |x1-x2| + |y1-y2|
-    // G-cost: distance from start
-    // H-cost: estimated distance to goal
-    // F-cost: G + H (total estimated cost)
-}
-```
+#### **Enemy AI - Different pathfinding algorithms**
+The three enemies use their own pathfinding algorithms to catch the player: Red uses A*, orange used Best-first (greedy), and yellow uses dijkstra!
+To show the differences in their behaviours, we made yellow the slowest and orange the fastest. However, orange also has a chance of targeting the wrong square, to simulate its inaccuracies. 
 
 ### Class Hierarchy
 
