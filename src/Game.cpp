@@ -24,36 +24,28 @@ Game::Game()
     if (!m_roundBackgroundTexture.loadFromFile("src/assets/round.png")) {
         std::cout << "Warning: Could not load round background texture from src/assets/round.png" << std::endl;
     } else {
-        std::cout << "Successfully loaded round background texture" << std::endl;
         m_roundBackgroundSprite = std::make_unique<sf::Sprite>(m_roundBackgroundTexture);
         float scaleX = static_cast<float>(WINDOW_WIDTH) / m_roundBackgroundTexture.getSize().x;
         float scaleY = static_cast<float>(WINDOW_HEIGHT) / m_roundBackgroundTexture.getSize().y;
         m_roundBackgroundSprite->setScale(sf::Vector2f(scaleX, scaleY));
-        std::cout << "Round background scaled to: " << scaleX << "x" << scaleY << std::endl;
     }
 
     // Load game over texture
     if (!m_gameOverTexture.loadFromFile("src/assets/game-over.png")) {
         std::cout << "Warning: Could not load game over texture from src/assets/game-over.png" << std::endl;
     } else {
-        std::cout << "Successfully loaded game over texture" << std::endl;
         m_gameOverSprite = std::make_unique<sf::Sprite>(m_gameOverTexture);
         float scaleX = static_cast<float>(WINDOW_WIDTH) / m_gameOverTexture.getSize().x;
         float scaleY = static_cast<float>(WINDOW_HEIGHT) / m_gameOverTexture.getSize().y;
         m_gameOverSprite->setScale(sf::Vector2f(scaleX, scaleY));
-        std::cout << "Game over background scaled to: " << scaleX << "x" << scaleY << std::endl;
     }
 
     if (!m_keyTexture1.loadFromFile("src/assets/key1.png") || !m_keyTexture2.loadFromFile("src/assets/key2.png")) {
         std::cout << "Warning: Could not load key animation textures, using default shape" << std::endl;
-    } else {
-        std::cout << "Successfully loaded key animation textures" << std::endl;
     }
 
     if (!m_ghostTexture1.loadFromFile("src/assets/ghost1.png") || !m_ghostTexture2.loadFromFile("src/assets/ghost2.png")) {
         std::cout << "Warning: Could not load ghost animation textures, using default shape" << std::endl;
-    } else {
-        std::cout << "Successfully loaded ghost animation textures" << std::endl;
     }
 
     startNewRound();
@@ -350,8 +342,6 @@ void Game::setupRound() {
 }
 
 void Game::restartGame() {
-    std::cout << "Restarting game from Round 1..." << std::endl;
-    
     m_currentRound = 1;
     m_gameOver = false;
     m_roundTransition = false;

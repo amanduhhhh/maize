@@ -47,7 +47,6 @@ void Enemy::update(float deltaTime, int playerX, int playerY, const Maze& maze) 
                 m_isDistracted = false;
                 m_distractionTimer = 0.0f;
                 m_distractionCooldown = DISTRACTION_COOLDOWN;
-                std::cout << "Best enemy stopped being distracted, returning to chase player" << std::endl;
             }
         } else {
             m_distractionCooldown -= deltaTime;
@@ -94,7 +93,6 @@ void Enemy::update(float deltaTime, int playerX, int playerY, const Maze& maze) 
                         m_isDistracted = true;
                         m_distractionTimer = DISTRACTION_DURATION;
                         needsRecalculation = true;
-                        std::cout << "Best enemy got distracted! Targeting (" << m_targetX << ", " << m_targetY << ") - Distance from player: " << distanceFromPlayer << std::endl;
                     }
                 }
             }
@@ -161,11 +159,6 @@ void Enemy::updateSpeedForRound(int roundNumber) {
     }
     
     m_moveDelay = std::max(m_moveDelay, 0.07f);
-
-    std::cout << "Round " << roundNumber << " - " 
-              << (m_type == EnemyType::ASTAR ? "A*" : 
-                  m_type == EnemyType::DIJKSTRA ? "Dijkstra" : "Best")
-              << " enemy delay: " << m_moveDelay << "s" << std::endl;
 }
 
 std::pair<int, int> Enemy::findRandomSpawnLocation(const Maze& maze, int playerX, int playerY) {

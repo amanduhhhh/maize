@@ -13,16 +13,39 @@ void Maze::render(sf::RenderWindow& window) {
 
     for (int y = 0; y < GRID_HEIGHT; ++y) {
         for (int x = 0; x < GRID_WIDTH; ++x) {
-            cell.setPosition(sf::Vector2f(x * CELL_SIZE, y * CELL_SIZE));
-
             if (m_grid[y][x] == CELL_WALL) {
                 continue;
-            } else {
-                if (x == 0 || x == GRID_WIDTH - 1 || y == 0 || y == GRID_HEIGHT - 1) {
-                    cell.setFillColor(EXIT_COLOR);  
-                } else {
-                    cell.setFillColor(PATH_COLOR);
+            }
+            
+            bool isEdge = (x == 0 || x == GRID_WIDTH - 1 || y == 0 || y == GRID_HEIGHT - 1);
+            
+            if (isEdge) {
+                const float doorThickness = CELL_SIZE / 2.0f;
+                const float doorLength = CELL_SIZE * 1.5f;
+                sf::RectangleShape door;
+                door.setFillColor(EXIT_COLOR);
+                
+                float centerX = x * CELL_SIZE + CELL_SIZE / 2.0f;
+                float centerY = y * CELL_SIZE + CELL_SIZE / 2.0f;
+                
+                if (x == 0) {
+                    door.setSize(sf::Vector2f(doorThickness, doorLength));
+                    door.setPosition(sf::Vector2f(x * CELL_SIZE, centerY - doorLength / 2.0f));
+                } else if (x == GRID_WIDTH - 1) {
+                    door.setSize(sf::Vector2f(doorThickness, doorLength));
+                    door.setPosition(sf::Vector2f(x * CELL_SIZE + CELL_SIZE - doorThickness, centerY - doorLength / 2.0f));
+                } else if (y == 0) {
+                    door.setSize(sf::Vector2f(doorLength, doorThickness));
+                    door.setPosition(sf::Vector2f(centerX - doorLength / 2.0f, y * CELL_SIZE));
+                } else if (y == GRID_HEIGHT - 1) {
+                    door.setSize(sf::Vector2f(doorLength, doorThickness));
+                    door.setPosition(sf::Vector2f(centerX - doorLength / 2.0f, y * CELL_SIZE + CELL_SIZE - doorThickness));
                 }
+                
+                window.draw(door);
+            } else {
+                cell.setPosition(sf::Vector2f(x * CELL_SIZE, y * CELL_SIZE));
+                cell.setFillColor(PATH_COLOR);
                 window.draw(cell);
             }
         }
@@ -32,7 +55,7 @@ void Maze::render(sf::RenderWindow& window) {
 }
 
 void Maze::drawWallLines(sf::RenderWindow& window) {
-    const float lineThickness = 2.0f;
+    const float lineThickness = 4.0f;
     sf::RectangleShape line;
     line.setFillColor(WALL_COLOR);
 

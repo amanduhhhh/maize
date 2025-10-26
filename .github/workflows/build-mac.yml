@@ -40,7 +40,7 @@ jobs:
         mkdir -p release-mac
         cp build/Oubliette release-mac/
         cp -r src/assets release-mac/
-        cp README.md release-mac/
+        cp README_GAME.txt release-mac/README.txt
         
         # Create a simple launcher script
         cat > release-mac/run.sh << 'EOF'
