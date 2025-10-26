@@ -44,6 +44,18 @@ Game::Game()
         std::cout << "Game over background scaled to: " << scaleX << "x" << scaleY << std::endl;
     }
 
+    if (!m_keyTexture1.loadFromFile("src/assets/key1.png") || !m_keyTexture2.loadFromFile("src/assets/key2.png")) {
+        std::cout << "Warning: Could not load key animation textures, using default shape" << std::endl;
+    } else {
+        std::cout << "Successfully loaded key animation textures" << std::endl;
+    }
+
+    if (!m_ghostTexture1.loadFromFile("src/assets/ghost1.png") || !m_ghostTexture2.loadFromFile("src/assets/ghost2.png")) {
+        std::cout << "Warning: Could not load ghost animation textures, using default shape" << std::endl;
+    } else {
+        std::cout << "Successfully loaded ghost animation textures" << std::endl;
+    }
+
     startNewRound();
 }
 
@@ -66,7 +78,6 @@ void Game::processEvents() {
             m_window.close();
         }
         
-        // Check for spacebar press on game over screen
         if (event->is<sf::Event::KeyPressed>()) {
             const auto& keyEvent = event->getIf<sf::Event::KeyPressed>();
             if (keyEvent && keyEvent->code == sf::Keyboard::Key::Space && m_gameOver) {
@@ -88,6 +99,14 @@ void Game::update(float deltaTime) {
 
     m_player.handleInput(m_maze, m_hasKey);
     m_player.updateGhostMode(deltaTime);
+
+    if (m_key) {
+        m_key->update(deltaTime);
+    }
+
+    for (auto& powerup : m_powerups) {
+        powerup.update(deltaTime);
+    }
 
     checkKeyCollection();
 
@@ -150,7 +169,6 @@ void Game::render() {
     }
 
     if (m_gameOver) {
-        // Draw game over background
         if (m_gameOverSprite) {
             m_window.draw(*m_gameOverSprite);
         } else {
@@ -321,6 +339,10 @@ void Game::setupRound() {
              (keyX == GRID_WIDTH / 2 && keyY == GRID_HEIGHT / 2));
 
     m_key = new Key(keyX, keyY);
+    
+    if (m_keyTexture1.getSize().x > 0 && m_keyTexture2.getSize().x > 0) {
+        m_key->setAnimationTextures(m_keyTexture1, m_keyTexture2);
+    }
 
     m_enemies.clear();
     m_powerups.clear();
@@ -330,17 +352,14 @@ void Game::setupRound() {
 void Game::restartGame() {
     std::cout << "Restarting game from Round 1..." << std::endl;
     
-    // Reset game state
     m_currentRound = 1;
     m_gameOver = false;
     m_roundTransition = false;
     m_transitionTimer = 0.0f;
     
-    // Reset player
     m_player.setPosition(GRID_WIDTH / 2, GRID_HEIGHT / 2);
     m_player.resetGhostMode();
     
-    // Clear and reset game objects
     m_enemies.clear();
     m_powerups.clear();
     m_hasKey = false;
@@ -349,8 +368,6 @@ void Game::restartGame() {
         delete m_key;
         m_key = nullptr;
     }
-    
-    // Start fresh round
     startNewRound();
 }
 
@@ -390,6 +407,10 @@ void Game::spawnPowerUp() {
 
     if (validSpawn) {
         m_powerups.emplace_back(powerupX, powerupY);
+        
+        if (m_ghostTexture1.getSize().x > 0 && m_ghostTexture2.getSize().x > 0) {
+            m_powerups.back().setAnimationTextures(m_ghostTexture1, m_ghostTexture2);
+        }
     }
 }
 

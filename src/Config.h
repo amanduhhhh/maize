@@ -11,7 +11,9 @@
 const int MAZE_WIDTH = 21;  
 const int MAZE_HEIGHT = 21; 
 const int CELL_SIZE = 36; 
-const float SPRITE_SCALE_MULTIPLIER = 2.4f; 
+const float SPRITE_SCALE_MULTIPLIER = 2.4f;
+const float ITEM_SPRITE_SCALE_MULTIPLIER = 1.5f;
+const float ITEM_ANIMATION_DELAY = 0.3f; 
 
 // Grid dimensions (includes walls between cells)
 const int GRID_WIDTH = MAZE_WIDTH * 2 + 1;    ///< grid width (51)

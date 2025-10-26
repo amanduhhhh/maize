@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <memory>
 
 #include "Config.h"
 
@@ -60,9 +61,41 @@ class PowerUp {
      */
     void deactivate() { m_active = false; }
 
+    /**
+     * @brief Sets the power-up texture for sprite rendering
+     *
+     * @param texture Reference to the texture to use
+     */
+    void setTexture(const sf::Texture& texture);
+
+    /**
+     * @brief Sets up animation with two textures
+     *
+     * @param texture1 First animation frame
+     * @param texture2 Second animation frame
+     */
+    void setAnimationTextures(const sf::Texture& texture1, const sf::Texture& texture2);
+
+    /**
+     * @brief Updates the power-up animation
+     *
+     * @param deltaTime Time elapsed since last update
+     */
+    void update(float deltaTime);
+
    private:
     int m_gridX;                 ///< Power-up X position in grid coordinates
     int m_gridY;                 ///< Power-up Y position in grid coordinates
     sf::CircleShape m_shape;     ///< Power-up visual representation
     bool m_active;               ///< Whether the power-up is still active
+    std::unique_ptr<sf::Sprite> m_sprite;  ///< Power-up sprite representation
+    bool m_useSprite;            ///< Whether to use sprite instead of circle
+    
+    // Animation system
+    const sf::Texture* m_texture1;      ///< Pointer to first animation frame
+    const sf::Texture* m_texture2;      ///< Pointer to second animation frame
+    bool m_useAnimation;                ///< Whether to use animation
+    bool m_currentFrame;                ///< Current animation frame (false = frame1, true = frame2)
+    sf::Clock m_animationTimer;         ///< Timer for animation
+    static const float ANIMATION_DELAY; ///< Delay between animation frames
 };

@@ -162,6 +162,8 @@ class Game {
     sf::Texture m_bestTexture1, m_bestTexture2;
     sf::Texture m_roundBackgroundTexture;
     sf::Texture m_gameOverTexture;
+    sf::Texture m_keyTexture1, m_keyTexture2;
+    sf::Texture m_ghostTexture1, m_ghostTexture2;
     
     // Round transition
     bool m_roundTransition;
