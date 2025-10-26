@@ -1,0 +1,71 @@
+name: Build and Release for Windows
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        # Install SFML via vcpkg
+        git clone https://github.com/Microsoft/vcpkg.git
+        cd vcpkg
+        .\bootstrap-vcpkg.bat
+        .\vcpkg install sfml:x64-windows
+        
+    - name: Create build directory
+      run: mkdir build
+      
+    - name: Configure CMake
+      run: |
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../vcpkg/scripts/buildsystems/vcpkg.cmake
+        
+    - name: Build
+      run: |
+        cd build
+        cmake --build . --config Release
+        
+    - name: Create release package
+      run: |
+        mkdir release-windows
+        copy build\Release\Oubliette.exe release-windows\
+        xcopy src\assets release-windows\assets\ /E /I
+        copy README.md release-windows\
+        
+        # Copy SFML DLLs
+        copy vcpkg\installed\x64-windows\bin\*.dll release-windows\
+        
+        # Create a batch launcher
+        echo @echo off > release-windows\run.bat
+        echo cd /d "%%~dp0" >> release-windows\run.bat
+        echo Oubliette.exe >> release-windows\run.bat
+        
+    - name: Create ZIP archive
+      run: |
+        cd release-windows
+        powershell Compress-Archive -Path * -DestinationPath ..\Oubliette-Windows.zip
+        
+    - name: Upload release
+      uses: actions/upload-artifact@v4
+      with:
+        name: Oubliette-Windows
+        path: Oubliette-Windows.zip
+        
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: Oubliette-Windows.zip
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

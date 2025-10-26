@@ -1,0 +1,68 @@
+name: Build and Release for macOS
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-mac:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        brew update
+        brew install cmake sfml
+        
+    - name: Create build directory
+      run: mkdir build
+      
+    - name: Configure CMake
+      run: |
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+        
+    - name: Build
+      run: |
+        cd build
+        make -j$(sysctl -n hw.ncpu)
+        
+    - name: Create release package
+      run: |
+        mkdir -p release-mac
+        cp build/Oubliette release-mac/
+        cp -r src/assets release-mac/
+        cp README.md release-mac/
+        
+        # Create a simple launcher script
+        cat > release-mac/run.sh << 'EOF'
+        #!/bin/bash
+        cd "$(dirname "$0")"
+        ./Oubliette
+        EOF
+        chmod +x release-mac/run.sh
+        
+    - name: Create ZIP archive
+      run: |
+        cd release-mac
+        zip -r ../Oubliette-macOS.zip .
+        
+    - name: Upload release
+      uses: actions/upload-artifact@v4
+      with:
+        name: Oubliette-macOS
+        path: Oubliette-macOS.zip
+        
+    - name: Create GitHub Release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: Oubliette-macOS.zip
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
