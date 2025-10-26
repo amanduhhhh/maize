@@ -111,6 +111,11 @@ class Game {
     void setupRound();
 
     /**
+     * @brief Restarts the game from round 1
+     */
+    void restartGame();
+
+    /**
      * @brief Spawns a new power-up at a random location
      */
     void spawnPowerUp();
@@ -156,6 +161,7 @@ class Game {
     sf::Texture m_dijkstraTexture1, m_dijkstraTexture2;
     sf::Texture m_bestTexture1, m_bestTexture2;
     sf::Texture m_roundBackgroundTexture;
+    sf::Texture m_gameOverTexture;
     
     // Round transition
     bool m_roundTransition;
@@ -163,4 +169,5 @@ class Game {
     sf::Font m_font;
     sf::Text m_roundText;
     std::unique_ptr<sf::Sprite> m_roundBackgroundSprite;
+    std::unique_ptr<sf::Sprite> m_gameOverSprite;
 };

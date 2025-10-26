@@ -32,6 +32,18 @@ Game::Game()
         std::cout << "Round background scaled to: " << scaleX << "x" << scaleY << std::endl;
     }
 
+    // Load game over texture
+    if (!m_gameOverTexture.loadFromFile("src/assets/game-over.png")) {
+        std::cout << "Warning: Could not load game over texture from src/assets/game-over.png" << std::endl;
+    } else {
+        std::cout << "Successfully loaded game over texture" << std::endl;
+        m_gameOverSprite = std::make_unique<sf::Sprite>(m_gameOverTexture);
+        float scaleX = static_cast<float>(WINDOW_WIDTH) / m_gameOverTexture.getSize().x;
+        float scaleY = static_cast<float>(WINDOW_HEIGHT) / m_gameOverTexture.getSize().y;
+        m_gameOverSprite->setScale(sf::Vector2f(scaleX, scaleY));
+        std::cout << "Game over background scaled to: " << scaleX << "x" << scaleY << std::endl;
+    }
+
     startNewRound();
 }
 
@@ -52,6 +64,14 @@ void Game::processEvents() {
     while (auto event = m_window.pollEvent()) {
         if (event->is<sf::Event::Closed>()) {
             m_window.close();
+        }
+        
+        // Check for spacebar press on game over screen
+        if (event->is<sf::Event::KeyPressed>()) {
+            const auto& keyEvent = event->getIf<sf::Event::KeyPressed>();
+            if (keyEvent && keyEvent->code == sf::Keyboard::Key::Space && m_gameOver) {
+                restartGame();
+            }
         }
     }
 }
@@ -92,8 +112,7 @@ void Game::update(float deltaTime) {
 
     if (checkGameOverCondition()) {
         m_gameOver = true;
-        std::cout << "Game Over! The enemy caught you!" << std::endl;
-        m_window.close();
+        std::cout << "Game Over! The enemy caught you! Press SPACE to restart." << std::endl;
     }
 }
 
@@ -131,8 +150,16 @@ void Game::render() {
     }
 
     if (m_gameOver) {
-        // Simple text rendering could be added here
-        // For now, we'll just keep the window open
+        // Draw game over background
+        if (m_gameOverSprite) {
+            m_window.draw(*m_gameOverSprite);
+        } else {
+            // Fallback: black background 
+            sf::RectangleShape blackOverlay;
+            blackOverlay.setSize(sf::Vector2f(WINDOW_WIDTH, WINDOW_HEIGHT));
+            blackOverlay.setFillColor(sf::Color::Black);
+            m_window.draw(blackOverlay);
+        }
     }
 
     m_window.display();
@@ -298,6 +325,33 @@ void Game::setupRound() {
     m_enemies.clear();
     m_powerups.clear();
     spawnEnemiesForRound(m_currentRound);
+}
+
+void Game::restartGame() {
+    std::cout << "Restarting game from Round 1..." << std::endl;
+    
+    // Reset game state
+    m_currentRound = 1;
+    m_gameOver = false;
+    m_roundTransition = false;
+    m_transitionTimer = 0.0f;
+    
+    // Reset player
+    m_player.setPosition(GRID_WIDTH / 2, GRID_HEIGHT / 2);
+    m_player.resetGhostMode();
+    
+    // Clear and reset game objects
+    m_enemies.clear();
+    m_powerups.clear();
+    m_hasKey = false;
+    
+    if (m_key) {
+        delete m_key;
+        m_key = nullptr;
+    }
+    
+    // Start fresh round
+    startNewRound();
 }
 
 void Game::spawnPowerUp() {
