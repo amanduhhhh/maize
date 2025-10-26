@@ -155,10 +155,12 @@ class Game {
     sf::Texture m_astarTexture1, m_astarTexture2;
     sf::Texture m_dijkstraTexture1, m_dijkstraTexture2;
     sf::Texture m_bestTexture1, m_bestTexture2;
+    sf::Texture m_roundBackgroundTexture;
     
     // Round transition
     bool m_roundTransition;
     float m_transitionTimer;
     sf::Font m_font;
     sf::Text m_roundText;
+    std::unique_ptr<sf::Sprite> m_roundBackgroundSprite;
 };

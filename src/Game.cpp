@@ -10,7 +10,7 @@ Game::Game()
     }
 
     m_roundText.setFont(m_font);
-    m_roundText.setCharacterSize(48);
+    m_roundText.setCharacterSize(72);
     m_roundText.setFillColor(sf::Color::White);
     m_roundText.setStyle(sf::Text::Bold);
 
@@ -19,6 +19,17 @@ Game::Game()
         std::cout << "Warning: Could not load animation textures, using colored shapes" << std::endl;
     } else {
         m_player.setAnimationTextures(m_playerTexture1, m_playerTexture2);
+    }
+
+    if (!m_roundBackgroundTexture.loadFromFile("src/assets/round.png")) {
+        std::cout << "Warning: Could not load round background texture from src/assets/round.png" << std::endl;
+    } else {
+        std::cout << "Successfully loaded round background texture" << std::endl;
+        m_roundBackgroundSprite = std::make_unique<sf::Sprite>(m_roundBackgroundTexture);
+        float scaleX = static_cast<float>(WINDOW_WIDTH) / m_roundBackgroundTexture.getSize().x;
+        float scaleY = static_cast<float>(WINDOW_HEIGHT) / m_roundBackgroundTexture.getSize().y;
+        m_roundBackgroundSprite->setScale(sf::Vector2f(scaleX, scaleY));
+        std::cout << "Round background scaled to: " << scaleX << "x" << scaleY << std::endl;
     }
 
     startNewRound();
@@ -107,11 +118,15 @@ void Game::render() {
 
     // Round transition screen
     if (m_roundTransition) {
-        sf::RectangleShape blackOverlay;
-        blackOverlay.setSize(sf::Vector2f(WINDOW_WIDTH, WINDOW_HEIGHT));
-        blackOverlay.setFillColor(sf::Color::Black);
-        m_window.draw(blackOverlay);
-
+        if (m_roundBackgroundSprite) {
+            m_window.draw(*m_roundBackgroundSprite);
+        } else {
+            sf::RectangleShape blackOverlay;
+            blackOverlay.setSize(sf::Vector2f(WINDOW_WIDTH, WINDOW_HEIGHT));
+            blackOverlay.setFillColor(sf::Color::Black);
+            m_window.draw(blackOverlay);
+        }
+        
         m_window.draw(m_roundText);
     }
 
