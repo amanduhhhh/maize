@@ -46,3 +46,5 @@ Game (Handles game loop and state updates)
 ```
 
 To build the game yourself, please download an appropriate SFML version for your compiler and extract it to the root folder. You can then run CMake. 
+
+Credits to [cedric](https://github.com/cedricicic) for the art :-)
